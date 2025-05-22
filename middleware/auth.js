@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken")
 exports.auth = async(req, res, next) => {
     try {
         // Extracting the token
-        const token = req.cookies?.token || req.body?.token || req.header("Authorization").replace("Bearer", " ")
+        const token = req.cookies?.token || req.body?.token || req.header("Authorization").replace("Bearer ", "")
+        console.log("Token: ", token)
         if(!token) {
             return res.status(401).json({
                 success: false,
@@ -26,13 +27,14 @@ exports.auth = async(req, res, next) => {
     } catch (error) {
         return res.status(401).json({
             success: false,
-            message: "Something went wrong validating the user"
+            message: "Something went wrong validating the user",
+            error: error
         })
     }
 }
 
 exports.isAdmin = async(req, res, next) => {
-    const key = req.header('api-key-admin')
+    const key = req.header('x-api-key')
     if(key !== process.env.API_ADMIN){
         return res.status(403).json({
             success: false,

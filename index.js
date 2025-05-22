@@ -3,8 +3,11 @@ const db = require("./config/db")
 require("dotenv").config()
 const authRoutes = require("./routes/authRoute")
 const trainRoutes = require("./routes/trainRoute")
+const cookieParser = require("cookie-parser")
+
 const app = express()
 app.use(express.json())
+app.use(cookieParser())
 
 const PORT = process.env.PORT || 4000
 

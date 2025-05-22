@@ -102,7 +102,7 @@ exports.loginUser = async (req, res) => {
 
             const {password: _, ...userData} = user
 
-            res.cookie("token", token).status(200).json({
+            res.cookie("token", token, {expires: new Date(Date.now() + 5 * 3600000)}).status(200).json({
                 success: true,
                 token,
                 user: userData,
