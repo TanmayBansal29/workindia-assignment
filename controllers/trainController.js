@@ -2,15 +2,15 @@ const db = require("../config/db")
 
 exports.addTrain = async (req, res) => {
     try {
-        const {trainNumber, name, source, destination, totalSeats, avaiableSeats} = req.body
-        if(!trainNumber || !name || !source || !destination || !totalSeats || !avaiableSeats) {
+        const {trainNumber, name, source, destination, totalSeats, availableSeats} = req.body
+        if(!trainNumber || !name || !source || !destination || !totalSeats || !availableSeats) {
             return res.status(400).json({
                 success: false,
                 message: "Please Enter all the details"
             })
         }
 
-        const [train] = await new Promise((resolve, reject) => {
+        const train = await new Promise((resolve, reject) => {
             db.query("SELECT * FROM trains WHERE trainNumber = ?", [trainNumber], (err, result) => {
                 if(err) {
                     return reject(err)
@@ -19,16 +19,16 @@ exports.addTrain = async (req, res) => {
             })
         })
 
-        if(train) {
+        if(train.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: "Train already scheduled for other router"
+                message: "Train already scheduled for other route"
             })
         }
 
         const trainEntry = await new Promise((resolve, reject) => {
             db.query("INSERT INTO trains (trainNumber, name, source, destination, totalSeats, availableSeats) VALUES (?, ?, ?, ?, ?, ?)",
-                [trainNumber, name, source, destination, totalSeats, avaiableSeats],
+                [trainNumber, name, source, destination, totalSeats, availableSeats],
                 (err, result) => {
                     if(err) {
                         reject(err)

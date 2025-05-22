@@ -5,7 +5,6 @@ exports.auth = async(req, res, next) => {
     try {
         // Extracting the token
         const token = req.cookies?.token || req.body?.token || req.header("Authorization").replace("Bearer ", "")
-        console.log("Token: ", token)
         if(!token) {
             return res.status(401).json({
                 success: false,
