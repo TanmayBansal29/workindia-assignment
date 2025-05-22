@@ -8,7 +8,9 @@ cd workindia-assignment
 ```
 
 ### INSTALLING DEPENDENCIES
+```bash
 npm install
+```
 
 ## Setup MySQL Database
 ### LOG INTO MYSQL SERVER
@@ -37,7 +39,7 @@ npm run dev
 ```
 
 #### ADMIN CREDENTIALS:
-email: admin@gmail.com
+email: admin@gmail.com \n
 password: admin@123
 
 ## API ENDPOINTS
