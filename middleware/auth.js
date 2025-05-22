@@ -49,4 +49,5 @@ exports.isUser = async(req, res, next) => {
             message: "Unauthorized Access: Only for Users"
         })
     }
+    next();
 }
