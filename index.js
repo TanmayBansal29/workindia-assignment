@@ -3,6 +3,7 @@ const db = require("./config/db")
 require("dotenv").config()
 const authRoutes = require("./routes/authRoute")
 const trainRoutes = require("./routes/trainRoute")
+const bookingRoutes = require("./routes/bookingRoute")
 const cookieParser = require("cookie-parser")
 
 const app = express()
@@ -17,6 +18,7 @@ app.listen(PORT, () => {
 
 app.use("/api/v1/user", authRoutes)
 app.use("/api/v1/train", trainRoutes)
+app.use("/api/v1", bookingRoutes)
 
 app.get("/", (req, res) => {
     db.query('SELECT NOW()', (err, result) => {

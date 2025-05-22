@@ -6,8 +6,8 @@ exports.bookSeat = async (req, res) => {
         const userID = req.user.ID
         const trainID = req.params.trainID
 
-        const {journeyDate, numberOfSeats, fare} = req.body
-        if(!journeyDate || !numberOfSeats || !fare) {
+        const {journeyDate, numberOfSeats} = req.body
+        if(!journeyDate || !numberOfSeats) {
             return res.status(400).json({
                 success: false,
                 message: "Please Enter all the fields"
@@ -38,10 +38,10 @@ exports.bookSeat = async (req, res) => {
             })
         }
 
-        totalFare = bookingTrain.fare * numberOfSeats
+        totalFare = bookingTrain.Fare * numberOfSeats
 
         const booking = await new Promise((resolve, reject) => {
-            db.query("INSERT INTO bookings (userID, trainID, journeyDate, numberOfSeats, fare) VALUES (?, ?, ?, ?, ?)",
+            db.query("INSERT INTO bookings (userID, trainID, journeyDate, numberOfSeats, totalFare) VALUES (?, ?, ?, ?, ?)",
                 [userID, trainID, journeyDate, numberOfSeats, totalFare],
                 (err, result) => {
                     if(err){
@@ -62,13 +62,13 @@ exports.bookSeat = async (req, res) => {
         })
 
         return res.status(200).json({
-            success: false,
+            success: true,
             message: "Booking is Successfuly",
             data: {
                 bookedTrain: trainID,
                 journeyDate: journeyDate,
                 seatsBooked: numberOfSeats,
-                totalFare: fare
+                totalFare: totalFare
             }
         })
 
