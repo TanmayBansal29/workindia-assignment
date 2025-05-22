@@ -2,6 +2,7 @@ const express = require("express")
 const db = require("./config/db")
 require("dotenv").config()
 const authRoutes = require("./routes/authRoute")
+const trainRoutes = require("./routes/trainRoute")
 const app = express()
 app.use(express.json())
 
@@ -12,6 +13,7 @@ app.listen(PORT, () => {
 })
 
 app.use("/api/v1/user", authRoutes)
+app.use("/api/v1/train", trainRoutes)
 
 app.get("/", (req, res) => {
     db.query('SELECT NOW()', (err, result) => {
