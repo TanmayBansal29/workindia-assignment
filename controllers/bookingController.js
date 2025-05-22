@@ -2,6 +2,7 @@ const db = require("../config/db")
 
 // Controller for user to book the train seats
 exports.bookSeat = async (req, res) => {
+    // Getting connectiong through db
     const connection = await db.getConnection();
     try {
         const userID = req.user.id
@@ -15,10 +16,11 @@ exports.bookSeat = async (req, res) => {
             })
         }
 
+        // Starting transaction only for one user, different users cannot book simulatenously
         await connection.beginTransaction()
 
+        // Checking - Finding the train 
         const [train] = await connection.query("SELECT * FROM trains WHERE ID = ?", [trainID])
-
         if(train.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -26,6 +28,7 @@ exports.bookSeat = async (req, res) => {
             })
         }
 
+        // Checking - Availablity of seats
         const bookingTrain = train[0]
         if(bookingTrain.availableSeats <= 0 || numberOfSeats > bookingTrain.availableSeats) {
             return res.status(400).json({
@@ -36,10 +39,12 @@ exports.bookSeat = async (req, res) => {
 
         const totalFare = bookingTrain.Fare * numberOfSeats
 
+        // Saving data into database table
         await connection.query(`INSERT INTO bookings (userID, trainID, journeyDate, numberOfSeats, totalFare) 
             VALUES (?, ?, ?, ?, ?)`,
             [userID, trainID, journeyDate, numberOfSeats, totalFare])
 
+        // Updating the number ofd seats
         await connection.query("UPDATE trains SET availableSeats = availableSeats - ? WHERE ID = ?", [numberOfSeats, trainID])
 
         await connection.commit()
@@ -72,7 +77,7 @@ exports.getBookingDetails = async (req, res) => {
     try {
         const bookingID = req.params.bookingID
         const [booking] = await db.query("SELECT * from bookings WHERE ID = ?", [bookingID])
-
+        // Checking - whether any booking exists
         if(booking.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -80,6 +85,7 @@ exports.getBookingDetails = async (req, res) => {
             })
         }
 
+        // Getting the different details from multiple tables using joins
         const bookingDetails = await db.query(`SELECT b.ID AS bookingID, b.journeyDate, b.numberOfSeats, b.totalFare, b.status,
                 u.ID as userID, u.firstName, u.lastName, u.email, 
                 t.ID as trainID, t.trainNumber, t.name, t.source, t.destination FROM bookings b 

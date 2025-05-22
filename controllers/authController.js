@@ -6,7 +6,10 @@ require("dotenv").config()
 
 exports.registerUser = async (req, res) => {
     try {
+        // Destructuring the fields from req.body
         const {firstName, lastName, email, password} = req.body
+
+        // Checking - All fields are enetered or not
         if(!firstName || !lastName || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -14,6 +17,7 @@ exports.registerUser = async (req, res) => {
             })
         }
 
+        // Checking - Email Validation
         const emailValidation = validator.isEmail(email)
         if(!emailValidation) {
             return res.status(400).json({
@@ -22,8 +26,8 @@ exports.registerUser = async (req, res) => {
             })
         }
 
+        // Checking - Existing User
         const [existingUser] = await db.query(`SELECT * FROM users WHERE email = ?`, [email])
-
         if(existingUser.length > 0) {
             return res.status(400).json({
                 success: false,
@@ -31,8 +35,10 @@ exports.registerUser = async (req, res) => {
             })
         }
 
+        // Hashing the password
         const hashedPassword = await bcrypt.hash(password, 10)
 
+        // Inserting details into database
         await db.query(`INSERT INTO users (firstName, lastName, email, password, role) VALUES (?, ?, ?, ?, ?)`, 
                 [firstName, lastName, email, hashedPassword, 'user'])
 
@@ -54,7 +60,11 @@ exports.registerUser = async (req, res) => {
 // Controller for user to login into the system
 exports.loginUser = async (req, res) => {
     try {
+        
+        // Destructuring fields from req.body
         const {email, password} = req.body
+
+        // Checking - All fields entered or not
         if(!email || !password) {
             return res.status(400).json({
                 success: false,
@@ -62,8 +72,8 @@ exports.loginUser = async (req, res) => {
             })
         }
 
+        // Checking - whether user exists or not
         const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email])
-
         if(users.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -72,7 +82,8 @@ exports.loginUser = async (req, res) => {
         }
 
         const user = users[0]
-        
+
+        // creating the token to be stored for login logic
         if(await bcrypt.compare(password, user.password)) {
             const token = jwt.sign(
                 {ID: user.ID, email: user.email, id: user.ID, role: user.role},

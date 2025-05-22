@@ -2,7 +2,10 @@ const db = require("../config/db")
 
 exports.addTrain = async (req, res) => {
     try {
+        // Destructuring the fields from req.body
         const {trainNumber, name, source, destination, totalSeats, availableSeats, fare} = req.body
+
+        // Checking - All fields are filled or not
         if(!trainNumber || !name || !source || !destination || !totalSeats || !availableSeats || !fare) {
             return res.status(400).json({
                 success: false,
@@ -11,7 +14,7 @@ exports.addTrain = async (req, res) => {
         }
 
         const [train] = await db.query("SELECT * FROM trains WHERE trainNumber = ?", [trainNumber])
-
+        // checking - whether train exists or not
         if(train.length > 0) {
             return res.status(400).json({
                 success: false,
@@ -19,6 +22,7 @@ exports.addTrain = async (req, res) => {
             })
         }
 
+        // Creating a train entry into database table
         const trainEntry = await db.query("INSERT INTO trains (trainNumber, name, source, destination, totalSeats, availableSeats, fare) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 [trainNumber, name, source, destination, totalSeats, availableSeats, fare])
 
@@ -40,7 +44,10 @@ exports.addTrain = async (req, res) => {
 // Controller to get the train from source to destination
 exports.getTrains = async(req, res) => {
     try {
+        // Destructuring the fields from req.body
         const {source, destination} = req.body
+
+        // Checking - All fields are filled or not
         if(!source || !destination) {
             return res.status(400).json({
                 success: false,
@@ -49,7 +56,7 @@ exports.getTrains = async(req, res) => {
         }
 
         const [trains] = await db.query("SELECT * FROM trains WHERE source = ? AND destination = ?", [source, destination])
-
+        // Checking - whether we have trains from source to destination or not
         if(trains.length === 0) {
             return res.status(404).json({
                 success: false,
