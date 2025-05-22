@@ -64,7 +64,7 @@ exports.getTrains = async(req, res) => {
             })
         }
 
-        const [trains] = await new Promise((resolve, reject) => {
+        const trains = await new Promise((resolve, reject) => {
             db.query("SELECT * FROM trains WHERE source = ? AND destination = ?", [source, destination], (err, result) => {
                 if(err) {
                     return reject(err)
