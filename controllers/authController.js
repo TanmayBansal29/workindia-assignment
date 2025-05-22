@@ -2,6 +2,7 @@ const db = require("../config/db")
 const validator = require("validator")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+require("dotenv").config()
 
 exports.registerUser = async (req, res) => {
     try {
