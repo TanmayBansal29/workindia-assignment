@@ -2,6 +2,7 @@ const db = require("../config/db")
 
 // Controller for user to book the train seats
 exports.bookSeat = async (req, res) => {
+    const connection = await db.getConnection();
     try {
         const userID = req.user.id
         const trainID = req.params.trainID
@@ -14,14 +15,9 @@ exports.bookSeat = async (req, res) => {
             })
         }
 
-        const train = await new Promise((resolve, reject) => {
-            db.query("SELECT * FROM trains WHERE ID = ?", [trainID], (err, result) => {
-                if(err){
-                    return reject(err)
-                }
-                resolve(result)
-            })
-        })
+        await connection.beginTransaction()
+
+        const [train] = await connection.query("SELECT * FROM trains WHERE ID = ?", [trainID])
 
         if(train.length === 0) {
             return res.status(404).json({
@@ -38,32 +34,19 @@ exports.bookSeat = async (req, res) => {
             })
         }
 
-        totalFare = bookingTrain.Fare * numberOfSeats
+        const totalFare = bookingTrain.Fare * numberOfSeats
 
-        const booking = await new Promise((resolve, reject) => {
-            db.query("INSERT INTO bookings (userID, trainID, journeyDate, numberOfSeats, totalFare) VALUES (?, ?, ?, ?, ?)",
-                [userID, trainID, journeyDate, numberOfSeats, totalFare],
-                (err, result) => {
-                    if(err){
-                        return reject(err)
-                    }
-                    resolve(result)
-                }
-            )
-        })
+        await connection.query(`INSERT INTO bookings (userID, trainID, journeyDate, numberOfSeats, totalFare) 
+            VALUES (?, ?, ?, ?, ?)`,
+            [userID, trainID, journeyDate, numberOfSeats, totalFare])
 
-        await new Promise((resolve, reject) => {
-            db.query("UPDATE trains SET availableSeats = availableSeats - ? WHERE ID = ?", [numberOfSeats, trainID], (err, result) => {
-                if(err){
-                    return reject(err)
-                }
-                resolve(result)
-            })
-        })
+        await connection.query("UPDATE trains SET availableSeats = availableSeats - ? WHERE ID = ?", [numberOfSeats, trainID])
+
+        await connection.commit()
 
         return res.status(200).json({
             success: true,
-            message: "Booking is Successfuly",
+            message: "Booking is Successful",
             data: {
                 bookedTrain: trainID,
                 journeyDate: journeyDate,
@@ -73,11 +56,14 @@ exports.bookSeat = async (req, res) => {
         })
 
     } catch (error) {
+        await connection.rollback()
         console.log("Error while booking train: ", error)
         return res.status(500).json({
             success: false,
             message: "Something went wrong booking the train, Please try again"
         })
+    } finally {
+        connection.release()
     }
 }
 
@@ -85,39 +71,25 @@ exports.bookSeat = async (req, res) => {
 exports.getBookingDetails = async (req, res) => {
     try {
         const bookingID = req.params.bookingID
-        const [booking] = await new Promise((resolve, reject) => {
-            db.query("SELECT * from bookings WHERE ID = ?", [bookingID], (err, result) => {
-                if(err){
-                    return reject(err)
-                }
-                resolve(result)
-            })
-        })
+        const [booking] = await db.query("SELECT * from bookings WHERE ID = ?", [bookingID])
 
-        if(!booking) {
+        if(booking.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "No Booking Found"
             })
         }
 
-        const bookingDetails = await new Promise((resolve, reject) => {
-            db.query(`SELECT b.ID AS bookingID, b.journeyDate, b.numberOfSeats, b.totalFare, b.status,
+        const bookingDetails = await db.query(`SELECT b.ID AS bookingID, b.journeyDate, b.numberOfSeats, b.totalFare, b.status,
                 u.ID as userID, u.firstName, u.lastName, u.email, 
                 t.ID as trainID, t.trainNumber, t.name, t.source, t.destination FROM bookings b 
                 JOIN users u on userID = u.ID
-                JOIN trains t on trainID = t.ID WHERE b.id = ?`, [bookingID], (err, result) => {
-                    if(err){
-                        return reject(err)
-                    }
-                    resolve(result)
-                })
-        })
+                JOIN trains t on trainID = t.ID WHERE b.id = ?`, [bookingID])
 
         return res.status(200).json({
             success: true,
             message: "Booking Details Fetched Successfully",
-            data: bookingDetails
+            data: bookingDetails[0]
         })
 
     } catch (error) {

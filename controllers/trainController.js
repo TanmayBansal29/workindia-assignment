@@ -10,33 +10,17 @@ exports.addTrain = async (req, res) => {
             })
         }
 
-        const train = await new Promise((resolve, reject) => {
-            db.query("SELECT * FROM trains WHERE trainNumber = ?", [trainNumber], (err, result) => {
-                if(err) {
-                    return reject(err)
-                }
-                resolve(result)
-            })
-        })
+        const [train] = await db.query("SELECT * FROM trains WHERE trainNumber = ?", [trainNumber])
 
         if(train.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: "Train already scheduled for other route"
+                message: "Train with the same train number already exists"
             })
         }
 
-        const trainEntry = await new Promise((resolve, reject) => {
-            db.query("INSERT INTO trains (trainNumber, name, source, destination, totalSeats, availableSeats, fare) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [trainNumber, name, source, destination, totalSeats, availableSeats, fare],
-                (err, result) => {
-                    if(err) {
-                        reject(err)
-                    }
-                    resolve(result)
-                }
-            )
-        })
+        const trainEntry = await db.query("INSERT INTO trains (trainNumber, name, source, destination, totalSeats, availableSeats, fare) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [trainNumber, name, source, destination, totalSeats, availableSeats, fare])
 
         return res.status(200).json({
             success: true,
@@ -64,14 +48,7 @@ exports.getTrains = async(req, res) => {
             })
         }
 
-        const trains = await new Promise((resolve, reject) => {
-            db.query("SELECT * FROM trains WHERE source = ? AND destination = ?", [source, destination], (err, result) => {
-                if(err) {
-                    return reject(err)
-                }
-                resolve(result)
-            })
-        })
+        const [trains] = await db.query("SELECT * FROM trains WHERE source = ? AND destination = ?", [source, destination])
 
         if(trains.length === 0) {
             return res.status(404).json({
@@ -85,6 +62,7 @@ exports.getTrains = async(req, res) => {
             message: "Trains fetched successfully",
             data: trains
         })
+
     } catch (error) {
         console.log("Error while fetching the trains data: ", error)
         return res.status(500).json({

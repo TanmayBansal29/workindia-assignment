@@ -22,16 +22,9 @@ exports.registerUser = async (req, res) => {
             })
         }
 
-        const [existingUser] = await new Promise((resolve, reject) => {
-            db.query(`SELECT * FROM users WHERE email = ?`, [email], (err, result) => {
-                if(err) {
-                    return reject(err)
-                } 
-                resolve(result)
-            })
-        })
+        const [existingUser] = await db.query(`SELECT * FROM users WHERE email = ?`, [email])
 
-        if(existingUser) {
+        if(existingUser.length > 0) {
             return res.status(400).json({
                 success: false,
                 message: "User already exixts with this email."
@@ -40,16 +33,8 @@ exports.registerUser = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        await new Promise((resolve, reject) => {
-            db.query(`INSERT INTO users (firstName, lastName, email, password, role) VALUES (?, ?, ?, ?, ?)`, 
-                [firstName, lastName, email, hashedPassword, 'user'],
-            (err, result) => {
-                if(err) {
-                    return reject(err)
-                }
-                resolve(result)
-            })
-        })
+        await db.query(`INSERT INTO users (firstName, lastName, email, password, role) VALUES (?, ?, ?, ?, ?)`, 
+                [firstName, lastName, email, hashedPassword, 'user'])
 
         return res.status(200).json({
             success: true,
@@ -77,22 +62,17 @@ exports.loginUser = async (req, res) => {
             })
         }
 
-        const [user] = await new Promise((resolve, reject) => {
-            db.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(result)
-            })
-        })
+        const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email])
 
-        if(!user) {
+        if(users.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "User is not registered. Please register first"
             })
         }
 
+        const user = users[0]
+        
         if(await bcrypt.compare(password, user.password)) {
             const token = jwt.sign(
                 {ID: user.ID, email: user.email, id: user.ID, role: user.role},
