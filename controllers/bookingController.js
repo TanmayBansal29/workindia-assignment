@@ -80,3 +80,51 @@ exports.bookSeat = async (req, res) => {
         })
     }
 }
+
+// Controller to get specific booking details
+exports.getBookingDetails = async (req, res) => {
+    try {
+        const bookingID = req.params.bookingID
+        const [booking] = await new Promise((resolve, reject) => {
+            db.query("SELECT * from bookings WHERE ID = ?", [bookingID], (err, result) => {
+                if(err){
+                    return reject(err)
+                }
+                resolve(result)
+            })
+        })
+
+        if(!booking) {
+            return res.status(404).json({
+                success: false,
+                message: "No Booking Found"
+            })
+        }
+
+        const bookingDetails = await newPromise((resolve, reject) => {
+            db.query(`SELECT b.ID AS bookingID, b.journeyDate, b.numberOfSeats, b.totalFare, b.status,
+                u.ID as userID, u.firstName, u.lastName, u.email, 
+                t.ID as trainID, t.trainNumber, t.name, t.source, t.destination FROM bookingg b 
+                JOIN users u on userID = u.ID
+                JOIN trains t on trainID = t.ID WHERE b.id = ?`, [bookingID], (err, result) => {
+                    if(err){
+                        return reject(err)
+                    }
+                    resolve(result)
+                })
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Booking Details Fetched Successfully",
+            data: bookingDetails
+        })
+        
+    } catch (error) {
+        console.log("Error while fetching the booking details", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while fetching the booking details. Please try again"
+        })
+    }
+}
