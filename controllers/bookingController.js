@@ -3,7 +3,7 @@ const db = require("../config/db")
 // Controller for user to book the train seats
 exports.bookSeat = async (req, res) => {
     try {
-        const userID = req.user.ID
+        const userID = req.user.id
         const trainID = req.params.trainID
 
         const {journeyDate, numberOfSeats} = req.body
@@ -101,10 +101,10 @@ exports.getBookingDetails = async (req, res) => {
             })
         }
 
-        const bookingDetails = await newPromise((resolve, reject) => {
+        const bookingDetails = await new Promise((resolve, reject) => {
             db.query(`SELECT b.ID AS bookingID, b.journeyDate, b.numberOfSeats, b.totalFare, b.status,
                 u.ID as userID, u.firstName, u.lastName, u.email, 
-                t.ID as trainID, t.trainNumber, t.name, t.source, t.destination FROM bookingg b 
+                t.ID as trainID, t.trainNumber, t.name, t.source, t.destination FROM bookings b 
                 JOIN users u on userID = u.ID
                 JOIN trains t on trainID = t.ID WHERE b.id = ?`, [bookingID], (err, result) => {
                     if(err){
@@ -119,7 +119,7 @@ exports.getBookingDetails = async (req, res) => {
             message: "Booking Details Fetched Successfully",
             data: bookingDetails
         })
-        
+
     } catch (error) {
         console.log("Error while fetching the booking details", error)
         return res.status(500).json({
