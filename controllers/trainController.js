@@ -2,8 +2,8 @@ const db = require("../config/db")
 
 exports.addTrain = async (req, res) => {
     try {
-        const {trainNumber, name, source, destination, totalSeats, availableSeats} = req.body
-        if(!trainNumber || !name || !source || !destination || !totalSeats || !availableSeats) {
+        const {trainNumber, name, source, destination, totalSeats, availableSeats, fare} = req.body
+        if(!trainNumber || !name || !source || !destination || !totalSeats || !availableSeats || !fare) {
             return res.status(400).json({
                 success: false,
                 message: "Please Enter all the details"
@@ -27,8 +27,8 @@ exports.addTrain = async (req, res) => {
         }
 
         const trainEntry = await new Promise((resolve, reject) => {
-            db.query("INSERT INTO trains (trainNumber, name, source, destination, totalSeats, availableSeats) VALUES (?, ?, ?, ?, ?, ?)",
-                [trainNumber, name, source, destination, totalSeats, availableSeats],
+            db.query("INSERT INTO trains (trainNumber, name, source, destination, totalSeats, availableSeats, fare) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [trainNumber, name, source, destination, totalSeats, availableSeats, fare],
                 (err, result) => {
                     if(err) {
                         reject(err)
